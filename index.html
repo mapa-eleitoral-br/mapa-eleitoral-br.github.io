@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mapa eleitoral – 2º turno presidencial 2026</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+</head>
+<body>
+  <div class="app">
+    <aside class="lateral">
+      <header>
+        <h1>Mapa eleitoral do Brasil</h1>
+        <p class="subtitulo">2º turno presidencial · 25/10/2026 · por município</p>
+      </header>
+
+      <div id="faixa-fonte" class="faixa-fonte" role="status"></div>
+
+      <section class="controle">
+        <h2>Categoria</h2>
+        <div class="opcoes" role="radiogroup" aria-label="Categoria">
+          <label class="opcao flavio"><input type="radio" name="categoria" value="flavio"> Flávio (PL, 22)</label>
+          <label class="opcao lula"><input type="radio" name="categoria" value="lula"> Lula (PT, 13)</label>
+          <label class="opcao nulos"><input type="radio" name="categoria" value="nulos"> Nulos</label>
+          <label class="opcao comparar" title="Quem ficou à frente em cada lugar e por quanto"><input type="radio" name="categoria" value="comparar" checked> Vantagem</label>
+          <label class="opcao" title="Escala 3×3: votos de Flávio × votos de Lula"><input type="radio" name="categoria" value="bivariado"> Bivariado</label>
+        </div>
+      </section>
+
+      <section class="controle">
+        <h2>Métrica</h2>
+        <div class="opcoes" role="radiogroup" aria-label="Métrica">
+          <label class="opcao"><input type="radio" name="metrica" value="absoluto"> Votos absolutos</label>
+          <label class="opcao"><input type="radio" name="metrica" value="percentual" checked> Percentual</label>
+        </div>
+      </section>
+
+      <section class="controle">
+        <h2>Nível geográfico</h2>
+        <select id="nivel" aria-label="Nível geográfico">
+          <option value="auto" selected>Automático (pelo zoom)</option>
+          <option value="pais">País</option>
+          <option value="estado">Estado</option>
+          <option value="municipio">Município</option>
+        </select>
+      </section>
+
+      <section class="controle">
+        <h2>Legenda</h2>
+        <div id="legenda" class="legenda"></div>
+      </section>
+
+      <section class="controle">
+        <h2>Região selecionada</h2>
+        <div id="painel" class="painel">
+          <p class="dica">Passe o mouse sobre o mapa para ver os detalhes. Clique em uma região para fixá-la aqui.</p>
+        </div>
+      </section>
+
+      <section class="controle">
+        <h2>Dados</h2>
+        <label class="botao-arquivo">
+          <input type="file" id="arquivo" accept=".json,application/json">
+          Carregar arquivo .json
+        </label>
+        <p id="arquivo-status" class="dica" role="status"></p>
+        <p class="dica">Formato gerado por <code>npm run converter</code> (veja o README).</p>
+      </section>
+
+      <section class="controle oficial">
+        <h2>Resultado oficial nacional (TSE)</h2>
+        <p class="dica">100% das seções apuradas, segundo o <a href="https://resultados.tse.jus.br/" target="_blank" rel="noopener">site de resultados do TSE</a>. Inclui os votos do exterior.</p>
+        <table class="tabela">
+          <tr><td>Lula (PT)</td><td>64.256.232</td><td>51,79% dos válidos</td></tr>
+          <tr><td>Flávio (PL)</td><td>59.826.041</td><td>48,21% dos válidos</td></tr>
+          <tr><td>Diferença</td><td colspan="2">4.430.191 votos para Lula</td></tr>
+        </table>
+      </section>
+
+      <details class="controle calculos">
+        <summary>Como os cálculos são feitos</summary>
+        <ul>
+          <li><strong>Total considerado</strong> = Flávio + Lula + outros + nulos + brancos. É o denominador de todos os percentuais. Brancos e outros aparecem separados no painel.</li>
+          <li><strong>% dos válidos</strong> (Flávio, Lula e outros, sem nulos e brancos) aparece só como informação extra.</li>
+          <li><strong>Estados e país</strong>: primeiro somamos os votos absolutos de cada município; só depois calculamos os percentuais. Nunca se faz média de percentuais. Cada município entra uma única vez, no estado indicado pelos 2 primeiros dígitos do código IBGE.</li>
+          <li>A soma dos estados é conferida contra o total nacional a cada carregamento de dados.</li>
+          <li>Votos do exterior e de municípios que não puderam ser associados ao código IBGE não aparecem no mapa. Quando existem, são mostrados no painel do país.</li>
+          <li><strong>Cores</strong>: azul = Flávio, vermelho = Lula, cinza = nulos. No modo absoluto, a intensidade segue a quantidade de votos; no percentual, a porcentagem sobre o total considerado.</li>
+          <li><strong>Classes</strong>: 9 faixas por quantis, calculadas para cada categoria e cada nível (município, estado). No nível país só há uma região, então a escala vai de 0 ao total de votos (ou de 0 a 100%).</li>
+          <li><strong>Vantagem</strong>: a cor mostra quem ficou à frente (azul Flávio, vermelho Lula) e a intensidade mostra por quanto, em 8 tons para cada lado. No modo percentual, a vantagem é em pontos percentuais com limites fixos (5, 10, 20 … 60 p.p.). No absoluto, é em votos, com limites por quantis.</li>
+          <li><strong>Bivariado</strong>: escala 3×3 com tercis independentes para Flávio e para Lula. Em votos absolutos, cidades grandes ficam escuras para os dois; prefira o modo percentual.</li>
+          <li><strong>Diferença</strong> = Flávio − Lula (positiva: Flávio à frente).</li>
+        </ul>
+      </details>
+    </aside>
+
+    <main class="area-mapa">
+      <div class="busca" role="search">
+        <div class="busca-campo">
+          <svg class="lupa" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><line x1="15.5" y1="15.5" x2="21" y2="21"/></svg>
+          <input id="busca" type="search" placeholder="Buscar município…" autocomplete="off" spellcheck="false"
+            role="combobox" aria-label="Buscar município" aria-autocomplete="list" aria-controls="busca-lista" aria-expanded="false">
+        </div>
+        <ul id="busca-lista" class="busca-lista" role="listbox" hidden></ul>
+      </div>
+      <div class="badges">
+        <span id="badge-nivel" class="badge">Nível: —</span>
+        <span id="badge-modo" class="badge">Modo: —</span>
+      </div>
+      <div class="zoom-botoes">
+        <button id="zoom-mais" type="button" title="Aproximar" aria-label="Aproximar">+</button>
+        <button id="zoom-menos" type="button" title="Afastar" aria-label="Afastar">−</button>
+        <button id="zoom-reset" type="button" title="Voltar ao Brasil" aria-label="Voltar ao Brasil">⟲</button>
+      </div>
+      <div id="marca-simulacao" class="marca-simulacao" hidden>SIMULAÇÃO</div>
+      <svg id="mapa" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Mapa eleitoral do Brasil"></svg>
+      <div id="tooltip" class="tooltip" hidden></div>
+      <div id="carregando" class="carregando">
+        <div class="spinner"></div>
+        <p id="carregando-texto">Carregando malhas do IBGE…</p>
+      </div>
+    </main>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

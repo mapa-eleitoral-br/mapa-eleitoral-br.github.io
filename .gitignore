@@ -1,0 +1,7 @@
+# Arquivos brutos do TSE (centenas de MB). O site usa só data/eleicao.json.
+data/tse/
+
+node_modules/
+*.log
+.DS_Store
+Thumbs.db

@@ -1,0 +1,16 @@
+{
+  "name": "mapa-eleitoral",
+  "version": "1.0.0",
+  "description": "Mapa eleitoral interativo do Brasil por município: Flávio Bolsonaro x Lula x nulos (2º turno, 25/10/2026).",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "npx http-server -p 8080 -c-1 .",
+    "baixar-malhas": "node tools/baixar-malhas.mjs",
+    "converter": "node tools/converter-tse.mjs",
+    "validar": "node tools/validar-tse.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
